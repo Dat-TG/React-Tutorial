@@ -100,3 +100,8 @@ body {
   color: #345DA7;
 }
 
+.sort {
+  display: flex;
+  margin-left: 20px;
+}
+

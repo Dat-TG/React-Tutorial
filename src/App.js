@@ -67,6 +67,7 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
+  const [isAscendingSort, setIsAscendingSort]=useState(true);
 
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
@@ -92,12 +93,21 @@ export default function Game() {
     );
   });
 
+  if (!isAscendingSort) moves.reverse();
+
   return (
     <div className="game">
       <div className="game-board">
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
+
       <div className="game-info">
+        <button className='history-point sort' onClick={() => {
+          setIsAscendingSort(!isAscendingSort);
+        }}>
+          {'Sort... '}
+          <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512"> <path d="M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41zm255-105L177 64c-9.4-9.4-24.6-9.4-33.9 0L24 183c-15.1 15.1-4.4 41 17 41h238c21.4 0 32.1-25.9 17-41z" /></svg>
+        </button>
         <ol>{moves}</ol>
       </div>
     </div>
