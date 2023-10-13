@@ -3,15 +3,15 @@ import { useState } from 'react';
 function Square({ value, onSquareClick, isWinnerCell }) {
   return (
     // highlight square that caused the win
-    <button className={"square " + (isWinnerCell ? " winner-cell" : "")} onClick={onSquareClick}>
+    <button className={"square " + (isWinnerCell ? " winner-cell" : "") + (value === 'X' ? " x-cell" : " o-cell")} onClick={onSquareClick}>
       {value}
     </button>
   );
 }
 
 function Board({ xIsNext, squares, onPlay }) {
-  const result = calculateWinner(squares);
 
+  const result = calculateWinner(squares);
   function handleClick(i) {
     if (result.winner || squares[i]) {
       return;
@@ -22,16 +22,19 @@ function Board({ xIsNext, squares, onPlay }) {
     } else {
       nextSquares[i] = 'O';
     }
-    onPlay(nextSquares);
+    onPlay(nextSquares, i);
   }
 
 
   let status;
+  let character;
   if (result.winner) {
-    status = 'Winner: ' + result.winner;
+    status = 'Winner: ';
+    character = result.winner;
   } else {
     if (!result.isDraw) {
-      status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+      status = 'Next player: ';
+      character = xIsNext ? 'X' : 'O';
     } else {
       // display a message about the result being a draw
       status = 'Draw';
@@ -50,21 +53,30 @@ function Board({ xIsNext, squares, onPlay }) {
 
   return (
     <>
-      <div className="status">{status}</div>
+      <div className="status">
+        <div>{status}</div>
+        <div className={character === 'X' ? 'x-cell' : 'o-cell'}>{character}</div>
+      </div>
       {board}
     </>
   );
 }
 
 export default function Game() {
-  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [history, setHistory] = useState([{
+    squares: Array(9).fill(null),
+    location: null
+  }]);
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
-  const currentSquares = history[currentMove];
+  const currentSquares = history[currentMove].squares;
   const [isAscendingSort, setIsAscendingSort] = useState(true);
 
-  function handlePlay(nextSquares) {
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+  function handlePlay(nextSquares, location) {
+    const nextHistory = [...history.slice(0, currentMove + 1), {
+      squares: nextSquares,
+      location: location
+    }];
     setHistory(nextHistory);
     setCurrentMove(nextHistory.length - 1);
   }
@@ -73,17 +85,20 @@ export default function Game() {
     setCurrentMove(nextMove);
   }
 
-  const moves = history.map((squares, move) => {
+  const moves = history.map((history, move) => {
     let description;
+    // Display the location for each move in the format (row, col) in the move history list.
+    const y = history.location % 3 + 1;
+    const x = Math.ceil((history.location + 1) / 3);
     if (move > 0) {
-      description = 'Go to move #' + move;
+      description = 'Go to move #' + move + ' (' + x + ', ' + y + ')';
     } else {
       description = 'Go to game start';
     }
     return (
       <li key={move}>
         { /*For the current move only, show “You are at move #…” instead of a button.*/}
-        {move !== currentMove ? <button className='history-point' onClick={() => jumpTo(move)}>{description}</button> : <div className='history-point current-point'>You are at move #{currentMove}</div>}
+        {move !== currentMove ? <button className='history-point' onClick={() => jumpTo(move)}>{description}</button> : <div className='history-point current-point'>{currentMove > 0 ? `You are at move #${currentMove} (${x}, ${y})` : 'You are at game start'} </div>}
       </li>
     );
   });
@@ -91,23 +106,28 @@ export default function Game() {
   if (!isAscendingSort) moves.reverse();
 
   return (
-    <div className="game">
-      <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
-      </div>
+    <>
+      <div className="game">
+        <div className="game-board">
+          <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+        </div>
 
-      <div className="game-info">
-        {/*Add a toggle button that lets you sort the moves in either ascending or descending order.*/}
-        <button className='history-point sort' onClick={() => {
-          setIsAscendingSort(!isAscendingSort);
-        }}>
-          {'Sort... '}
-          {isAscendingSort ?
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-160v-487L216-423l-56-57 320-320 320 320-56 57-224-224v487h-80Z" /></svg> : <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z" /></svg>}
-        </button>
-        <ol>{moves}</ol>
+        <div className="game-info">
+          {/*Add a toggle button that lets you sort the moves in either ascending or descending order.*/}
+          <button className='history-point sort' onClick={() => {
+            setIsAscendingSort(!isAscendingSort);
+          }}>
+            {'Sort... '}
+            {isAscendingSort ?
+              <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-160v-487L216-423l-56-57 320-320 320 320-56 57-224-224v487h-80Z" /></svg> : <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z" /></svg>}
+          </button>
+          <ol>{moves}</ol>
+        </div>
       </div>
-    </div>
+      <div className='footer'>
+        <p>20120454 - Lê Công Đắt</p>
+      </div>
+    </>
   );
 }
 

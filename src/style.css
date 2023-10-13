@@ -79,6 +79,9 @@ body {
 
 .status {
   margin-bottom: 10px;
+  display: flex;
+  gap: 2px;
+  font-size: 20px;
 }
 
 .game {
@@ -109,5 +112,32 @@ body {
 }
 
 .winner-cell {
-  background: yellow;
+  color: white !important;
+}
+
+.winner-cell.x-cell{
+  background: #0000A3;
+}
+
+.winner-cell.o-cell {
+  background: #D10000;
+}
+
+.x-cell {
+  color: #0000A3;
+  font-weight: bold;
+}
+
+.o-cell {
+  color: #D10000;
+  font-weight: bold;
+}
+
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  color: black;
+  text-align: center;
 }
