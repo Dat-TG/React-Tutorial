@@ -98,10 +98,16 @@ body {
 
 .current-point {
   color: #345DA7;
+  font-weight: bold;
 }
 
 .sort {
   display: flex;
   margin-left: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
+.winner-cell {
+  background: yellow;
+}

@@ -1,16 +1,19 @@
 import { useState } from 'react';
 
-function Square({ value, onSquareClick }) {
+function Square({ value, onSquareClick, isWinnerCell }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    // highlight square that caused the win
+    <button className={"square " + (isWinnerCell ? " winner-cell" : "")} onClick={onSquareClick}>
       {value}
     </button>
   );
 }
 
 function Board({ xIsNext, squares, onPlay }) {
+  const result = calculateWinner(squares);
+
   function handleClick(i) {
-    if (calculateWinner(squares) || squares[i]) {
+    if (result.winner || squares[i]) {
       return;
     }
     const nextSquares = squares.slice();
@@ -22,42 +25,33 @@ function Board({ xIsNext, squares, onPlay }) {
     onPlay(nextSquares);
   }
 
-  const winner = calculateWinner(squares);
+
   let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
+  if (result.winner) {
+    status = 'Winner: ' + result.winner;
   } else {
-    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+    if (!result.isDraw) {
+      status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+    } else {
+      // display a message about the result being a draw
+      status = 'Draw';
+    }
   }
 
+  // Rewrite Board to use two loops to make the squares instead of hardcoding them.
   var board = [];
   for (let i = 0; i < 3; i++) {
     let row = [];
     for (let j = 0; j < 3; j++) {
-      row.push(<Square value={squares[i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} />);
+      row.push(<Square key={'square' + i * 3 + j} value={squares[i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} isWinnerCell={result.lines && result.lines.includes(i * 3 + j)} />);
     }
-    board.push(<div className="board-row">{row}</div>);
+    board.push(<div className="board-row" key={'row' + i}>{row}</div>);
   }
 
   return (
     <>
       <div className="status">{status}</div>
       {board}
-      {/*<div className="board-row">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
-      </div>*/}
     </>
   );
 }
@@ -67,7 +61,7 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
-  const [isAscendingSort, setIsAscendingSort]=useState(true);
+  const [isAscendingSort, setIsAscendingSort] = useState(true);
 
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
@@ -88,6 +82,7 @@ export default function Game() {
     }
     return (
       <li key={move}>
+        { /*For the current move only, show “You are at move #…” instead of a button.*/}
         {move !== currentMove ? <button className='history-point' onClick={() => jumpTo(move)}>{description}</button> : <div className='history-point current-point'>You are at move #{currentMove}</div>}
       </li>
     );
@@ -102,11 +97,13 @@ export default function Game() {
       </div>
 
       <div className="game-info">
+        {/*Add a toggle button that lets you sort the moves in either ascending or descending order.*/}
         <button className='history-point sort' onClick={() => {
           setIsAscendingSort(!isAscendingSort);
         }}>
           {'Sort... '}
-          <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512"> <path d="M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41zm255-105L177 64c-9.4-9.4-24.6-9.4-33.9 0L24 183c-15.1 15.1-4.4 41 17 41h238c21.4 0 32.1-25.9 17-41z" /></svg>
+          {isAscendingSort ?
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-160v-487L216-423l-56-57 320-320 320 320-56 57-224-224v487h-80Z" /></svg> : <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z" /></svg>}
         </button>
         <ol>{moves}</ol>
       </div>
@@ -115,6 +112,7 @@ export default function Game() {
 }
 
 function calculateWinner(squares) {
+
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -125,11 +123,29 @@ function calculateWinner(squares) {
     [0, 4, 8],
     [2, 4, 6],
   ];
+
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return {
+        winner: squares[a],
+        lines: lines[i],
+        isDraw: false
+      }
     }
   }
-  return null;
+
+  let isDraw = true;
+  for (let i = 0; i < squares.length; i++) {
+    if (squares[i] == null) {
+      isDraw = false;
+      break;
+    }
+  }
+
+  return {
+    winner: null,
+    lines: null,
+    isDraw: isDraw
+  };
 }
