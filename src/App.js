@@ -124,6 +124,7 @@ export default function Game() {
           <ol>{moves}</ol>
         </div>
       </div>
+      
       <div className='footer'>
         <p>20120454 - Lê Công Đắt</p>
       </div>
